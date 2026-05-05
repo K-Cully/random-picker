@@ -14,6 +14,11 @@
    ========================================================= */
 const STORAGE_KEY = 'randomPickerData';
 
+/* Picker animation constants */
+const MIN_SPINS = 18;
+const SPIN_VARIANCE = 12;
+const SPIN_INTERVAL_MS = 80;
+
 const Storage = {
   /** @returns {{ topics: Record<string, string[]> }} */
   load() {
@@ -301,7 +306,7 @@ function runPicker(topic) {
 
   /* spinning phase */
   let spins = 0;
-  const totalSpins = 18 + Math.floor(Math.random() * 12); // 18-29 spins
+  const totalSpins = MIN_SPINS + Math.floor(Math.random() * SPIN_VARIANCE);
   let current = '';
 
   resultEl.innerHTML = '<span class="result-text result-spinning">…</span>';
@@ -334,7 +339,7 @@ function runPicker(topic) {
 
       pickBtn.disabled = false;
     }
-  }, 80);
+  }, SPIN_INTERVAL_MS);
 }
 
 /* =========================================================
