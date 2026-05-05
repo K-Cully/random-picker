@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Random Picker – add your own entries and let fate decide!" />
+  <title>Random Picker 🎲</title>
+
+  <!-- Preconnect for Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== Header ===== -->
+  <header class="app-header">
+    <span class="header-icon" aria-hidden="true">🎲</span>
+    <h1>Random Picker</h1>
+  </header>
+
+  <!-- ===== App Layout ===== -->
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" aria-label="Topics">
+      <div class="sidebar-header">
+        <h2>Topics</h2>
+      </div>
+
+      <div id="topic-list" class="topic-list" role="list" aria-label="Topic list">
+        <!-- rendered by JS -->
+      </div>
+
+      <form id="add-topic-form" class="add-topic-form" novalidate>
+        <div class="input-row">
+          <input
+            id="new-topic-input"
+            class="input-field"
+            type="text"
+            placeholder="New topic name…"
+            maxlength="100"
+            autocomplete="off"
+            aria-label="New topic name"
+          />
+          <button class="btn btn-primary btn-icon" type="submit" title="Add topic" aria-label="Add topic">＋</button>
+        </div>
+      </form>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content" aria-live="polite">
+      <!-- rendered by JS -->
+    </main>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container" class="toast-container" aria-live="assertive" aria-atomic="true"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
