@@ -12,7 +12,7 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# Allow only one concurrent deployment; additional runs are queued and execute sequentially.
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -30,10 +30,17 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
+      - name: Prepare site files
+        run: |
+          mkdir _site
+          cp index.html _site/
+          cp -r css _site/
+          cp -r js _site/
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
         with:
-          path: '.'
+          path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment

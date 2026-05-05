@@ -50,12 +50,14 @@ An animated "spinning" phase cycles through random entries for 18–29 iteration
 - `aria-live="polite"` on the main content area so screen readers are notified of dynamic updates.
 - Keyboard-navigable: all interactive elements are focusable; forms submit on Enter.
 
-## GitHub Pages Compatibility
+## ~~GitHub Pages Compatibility~~
 
-Because the app is a set of static files with no server-side logic, it can be published directly via **GitHub Pages** (Settings → Pages → Deploy from branch → `main` / root). The entry point is `index.html` at the repository root.
+> **Superseded on 2026-05-05** by "Automated GitHub Pages Deployment via GitHub Actions" below. The branch-based deployment method described here is no longer used; Pages is now deployed via a GitHub Actions workflow.
+
+~~Because the app is a set of static files with no server-side logic, it can be published directly via **GitHub Pages** (Settings → Pages → Deploy from branch → `main` / root). The entry point is `index.html` at the repository root.~~
 
 ## Automated GitHub Pages Deployment via GitHub Actions
 
 _Date: 2026-05-05_
 
-A GitHub Actions workflow (`.github/workflows/deploy.yml`) automatically deploys the site to GitHub Pages on every push to `main`. The workflow uses the official `actions/deploy-pages` action with the newer "GitHub Actions" Pages source (as opposed to the legacy branch-based source). This ensures the live site stays in sync with the latest code on `main` without manual intervention. Concurrency control prevents overlapping deployments.
+A GitHub Actions workflow (`.github/workflows/deploy.yml`) automatically deploys the site to GitHub Pages on every push to `main`. The workflow uses the official `actions/deploy-pages` action with the newer "GitHub Actions" Pages source (Settings → Pages → Source → **GitHub Actions**). This ensures the live site stays in sync with the latest code on `main` without manual intervention. Only the public site assets (`index.html`, `css/`, `js/`) are included in the deployment artifact to avoid exposing internal files. Concurrent deployments are queued and run sequentially to ensure every push is deployed.
