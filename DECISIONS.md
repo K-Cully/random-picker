@@ -39,8 +39,9 @@ An animated "spinning" phase cycles through random entries for 18–29 iteration
 ## Security
 
 - All user-supplied strings rendered into HTML are escaped with a dedicated `escapeHtml` / `escapeAttr` helper to prevent XSS.
-- No third-party scripts are loaded other than the Google Fonts stylesheet (font only, no JS).
+- No third-party scripts or stylesheets are loaded; all assets are local.
 - No cookies, analytics, or tracking of any kind.
+- The `font-family` stack (`'Inter', 'Segoe UI', system-ui, sans-serif`) means modern OS/browsers render a clean sans-serif font without any external requests.
 
 ## Accessibility
 
