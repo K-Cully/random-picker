@@ -22,6 +22,9 @@ const SPIN_INTERVAL_MS = 80;
 /* Pick history cap – keeps localStorage usage bounded */
 const MAX_PICKS_PER_TOPIC = 100;
 
+/* Default colour used when a stored/submitted colour fails hex validation */
+const DEFAULT_USER_COLOUR = '#7c3aed';
+
 const Storage = {
   /**
    * @returns {{
@@ -50,7 +53,7 @@ const Storage = {
                          typeof u.id === 'string' &&
                          typeof u.name === 'string' &&
                          typeof u.colour === 'string')
-            .map(u => ({ ...u, colour: isValidColour(u.colour) ? u.colour : '#7c3aed' }))
+            .map(u => ({ ...u, colour: isValidColour(u.colour) ? u.colour : DEFAULT_USER_COLOUR }))
         : [],
     };
     for (const [name, value] of Object.entries(data.topics || {})) {
@@ -160,7 +163,7 @@ const App = (() => {
     const existing = state.users.find(u => u.name.toLowerCase() === trimmed.toLowerCase());
     if (existing) return { ok: false, msg: `"${existing.name}" already exists.` };
     const id = crypto.randomUUID();
-    const safeColour = isValidColour(colour) ? colour : '#7c3aed';
+    const safeColour = isValidColour(colour) ? colour : DEFAULT_USER_COLOUR;
     state.users.push({ id, name: trimmed, colour: safeColour });
     persist();
     return { ok: true, user: { id, name: trimmed, colour: safeColour } };
