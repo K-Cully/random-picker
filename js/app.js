@@ -138,7 +138,7 @@ const App = (() => {
     if (!state.users) state.users = [];
     const existing = state.users.find(u => u.name.toLowerCase() === trimmed.toLowerCase());
     if (existing) return { ok: false, msg: `"${existing.name}" already exists.` };
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const id = crypto.randomUUID();
     state.users.push({ id, name: trimmed, colour });
     persist();
     return { ok: true, user: { id, name: trimmed, colour } };

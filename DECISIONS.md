@@ -87,7 +87,7 @@ _Date: 2026-05-06_
 
 Three related features were added together as they share data-structure concerns:
 
-1. **User addition** – A Users panel in the sidebar lets users create named entries with an associated hex colour (via `<input type="color">`). Users are stored in `state.users` as `{ id, name, colour }` objects. IDs are generated as a base-36 timestamp + random suffix to keep them short and collision-resistant without requiring a crypto API.
+1. **User addition** – A Users panel in the sidebar lets users create named entries with an associated hex colour (via `<input type="color">`). Users are stored in `state.users` as `{ id, name, colour }` objects. IDs are generated with `crypto.randomUUID()` (available in all modern browsers), providing strong uniqueness guarantees.
 
 2. **Entry attribution** – Entries are now stored as `{ text, userId }` objects instead of plain strings. When any users exist, a dropdown appears in the "Add entry" form so the submitter can optionally attribute the entry to a user. Deleting a user leaves existing entries and picks intact; the attribution is simply hidden in the UI (graceful degradation).
 
