@@ -473,8 +473,8 @@ function runPicker(topic) {
       }
 
       /* highlight matching entry */
-      const currentEntries = App.getEntries(topic);
-      const idx = currentEntries.indexOf(winner);
+      const topicEntries = App.getEntries(topic);
+      const idx = topicEntries.indexOf(winner);
       if (idx !== -1) {
         const entryEl = document.getElementById(`entry-${idx}`);
         if (entryEl) {
