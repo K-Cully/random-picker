@@ -21,7 +21,9 @@
   --clr-danger-hover: #d94863;
   --clr-text: #15324b;
   --clr-text-muted: #365e78;
-  --clr-text-faint: #31566e;
+  --clr-text-faint: #285170;
+  --clr-primary-glow: rgba(20,121,201,0.14);
+  --clr-focus-glow: rgba(20,121,201,0.35);
   --radius-sm: 14px;
   --radius-md: 18px;
   --radius-lg: 24px;
@@ -366,7 +368,7 @@ body {
 
 .input-field:focus {
   border-color: var(--clr-primary);
-  box-shadow: 0 0 0 3px #ffd166, 0 0 0 6px rgba(13,95,166,0.35);
+  box-shadow: 0 0 0 3px var(--clr-accent), 0 0 0 6px var(--clr-focus-glow);
 }
 
 /* ---------- Buttons ---------- */
@@ -462,7 +464,7 @@ body {
 
 .empty-state .empty-icon {
   font-size: 4rem;
-  filter: drop-shadow(0 5px 0 rgba(20,121,201,0.14));
+  filter: drop-shadow(0 5px 0 var(--clr-primary-glow));
 }
 
 .empty-state h2 {
