@@ -599,6 +599,25 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMainContent();
   });
 
+  /* Sidebar tab switching */
+  document.querySelectorAll('.sidebar-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.sidebar-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.sidebar-panel').forEach(p => {
+        p.classList.remove('active');
+        p.hidden = true;
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      const panel = $(tab.getAttribute('aria-controls'));
+      panel.classList.add('active');
+      panel.hidden = false;
+    });
+  });
+
   /* Initial render */
   renderTopicList();
   renderUserList();

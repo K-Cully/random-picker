@@ -96,3 +96,10 @@ Three related features were added together as they share data-structure concerns
 3. **Selection memory** – Each time the picker settles on a winner, `recordPick` appends `{ text, userId, timestamp }` to the topic's `picks` array. A "Pick History" card in the topic view renders these records newest-first, showing the entry text, user colour dot + name (if attributed), and a locale-formatted timestamp.
 
 4. **Data migration** – `Storage.migrate` handles v1 data (topics stored as string arrays) transparently on load, so existing data is preserved without any manual user action.
+
+## Sidebar Tabbed Navigation
+
+_Date: 2026-05-06_
+
+**Replaced stacked sidebar sections with a tab-based interface (Topics / Users)**  
+Rationale: The previous layout stacked the Topics and Users panels vertically within a fixed-width sidebar. When both panels had content the Users section would overlap or compress the Topics list, making the UI confusing. A tab interface shows one panel at a time, eliminates the overlap issue, and gives each panel the full vertical space of the sidebar. Tabs use ARIA `role="tablist"` / `role="tab"` / `role="tabpanel"` for accessibility.

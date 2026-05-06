@@ -22,12 +22,14 @@
     <!-- Sidebar -->
     <aside class="sidebar" aria-label="Topics and Users">
 
-      <!-- Topics section -->
-      <div class="sidebar-section sidebar-topics">
-        <div class="sidebar-header">
-          <h2>Topics</h2>
-        </div>
+      <!-- Tab Navigation -->
+      <div class="sidebar-tabs" role="tablist" aria-label="Sidebar navigation">
+        <button class="sidebar-tab active" role="tab" id="tab-topics" aria-selected="true" aria-controls="panel-topics">Topics</button>
+        <button class="sidebar-tab" role="tab" id="tab-users" aria-selected="false" aria-controls="panel-users">Users</button>
+      </div>
 
+      <!-- Topics panel -->
+      <div class="sidebar-panel active" id="panel-topics" role="tabpanel" aria-labelledby="tab-topics">
         <div id="topic-list" class="topic-list" role="list" aria-label="Topic list">
           <!-- rendered by JS -->
         </div>
@@ -48,12 +50,8 @@
         </form>
       </div>
 
-      <!-- Users section -->
-      <div class="sidebar-section sidebar-users">
-        <div class="sidebar-header">
-          <h2>Users</h2>
-        </div>
-
+      <!-- Users panel -->
+      <div class="sidebar-panel" id="panel-users" role="tabpanel" aria-labelledby="tab-users" hidden>
         <div id="user-list" class="user-list" role="list" aria-label="User list">
           <!-- rendered by JS -->
         </div>
