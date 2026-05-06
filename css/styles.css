@@ -21,7 +21,7 @@
   --clr-danger-hover: #d94863;
   --clr-text: #15324b;
   --clr-text-muted: #365e78;
-  --clr-text-faint: #5f8298;
+  --clr-text-faint: #466a7f;
   --radius-sm: 14px;
   --radius-md: 18px;
   --radius-lg: 24px;
@@ -39,7 +39,7 @@ body {
   background:
     radial-gradient(circle at 12% 16%, rgba(255,209,102,0.75) 0 44px, transparent 45px),
     radial-gradient(circle at 88% 12%, rgba(59,182,255,0.45) 0 56px, transparent 57px),
-    radial-gradient(circle at 78% 82%, rgba(255,255,255,0.38) 0 34px, transparent 35px),
+    radial-gradient(circle at 78% 82%, rgba(20,121,201,0.28) 0 34px, transparent 35px),
     linear-gradient(180deg, #bfeaff 0%, var(--clr-bg) 45%, #fff4c7 100%);
   color: var(--clr-text);
   display: flex;
@@ -366,7 +366,7 @@ body {
 
 .input-field:focus {
   border-color: var(--clr-primary);
-  box-shadow: 0 0 0 4px rgba(255,209,102,0.45);
+  box-shadow: 0 0 0 3px #ffd166, 0 0 0 6px rgba(13,95,166,0.35);
 }
 
 /* ---------- Buttons ---------- */
