@@ -1,0 +1,20 @@
+# Normalize line endings for all text files
+* text=auto
+
+# Explicitly declare text file types
+# diff drivers are set where git provides built-in support
+*.html text diff=html
+*.css  text diff=css
+*.js   text
+*.md   text diff=markdown
+*.yml  text
+*.yaml text
+*.json text
+*.svg  text
+
+# Denote binary file types
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary

@@ -56,6 +56,12 @@ An animated "spinning" phase cycles through random entries for 18–29 iteration
 
 ~~Because the app is a set of static files with no server-side logic, it can be published directly via **GitHub Pages** (Settings → Pages → Deploy from branch → `main` / root). The entry point is `index.html` at the repository root.~~
 
+## Standard Repository Metadata Files
+
+_Date: 2026-05-06_
+
+Added `.gitignore`, `.gitattributes`, and `.editorconfig` to the repository. `.gitignore` excludes OS-generated files (`.DS_Store`, `Thumbs.db`), editor/IDE artifacts, and log files. `.gitattributes` enforces consistent line endings, marks files as text where appropriate, and enables built-in language-aware diff drivers for HTML, CSS, and Markdown. `.editorconfig` standardises basic formatting (UTF-8, LF line endings, 2-space indentation) across editors. These files are standard for collaborative repositories and reduce accidental noise in commits.
+
 ## Automated GitHub Pages Deployment via GitHub Actions
 
 _Date: 2026-05-05_
