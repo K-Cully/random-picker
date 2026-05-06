@@ -599,6 +599,49 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMainContent();
   });
 
+  /* Sidebar tab switching */
+  const tabs = Array.from(document.querySelectorAll('.sidebar-tab'));
+
+  function activateTab(tab) {
+    tabs.forEach(t => {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+      t.setAttribute('tabindex', '-1');
+    });
+    document.querySelectorAll('.sidebar-panel').forEach(p => {
+      p.classList.remove('active');
+      p.hidden = true;
+    });
+    tab.classList.add('active');
+    tab.setAttribute('aria-selected', 'true');
+    tab.setAttribute('tabindex', '0');
+    tab.focus();
+    const panel = $(tab.getAttribute('aria-controls'));
+    panel.classList.add('active');
+    panel.hidden = false;
+  }
+
+  tabs.forEach((tab, i) => {
+    tab.setAttribute('tabindex', tab.classList.contains('active') ? '0' : '-1');
+    tab.addEventListener('click', () => activateTab(tab));
+    tab.addEventListener('keydown', e => {
+      let target = null;
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        target = tabs[(i + 1) % tabs.length];
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        target = tabs[(i - 1 + tabs.length) % tabs.length];
+      } else if (e.key === 'Home') {
+        target = tabs[0];
+      } else if (e.key === 'End') {
+        target = tabs[tabs.length - 1];
+      }
+      if (target) {
+        e.preventDefault();
+        activateTab(target);
+      }
+    });
+  });
+
   /* Initial render */
   renderTopicList();
   renderUserList();
