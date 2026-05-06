@@ -200,7 +200,8 @@ body {
   transition: background var(--transition);
 }
 
-.topic-item:hover .btn-delete-topic {
+.topic-item:hover .btn-delete-topic,
+.topic-item:focus-within .btn-delete-topic {
   display: flex;
 }
 
@@ -288,7 +289,8 @@ body {
   transition: background var(--transition);
 }
 
-.user-item:hover .btn-delete-user {
+.user-item:hover .btn-delete-user,
+.user-item:focus-within .btn-delete-user {
   display: flex;
 }
 

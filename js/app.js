@@ -19,6 +19,9 @@ const MIN_SPINS = 18;
 const SPIN_VARIANCE = 12;
 const SPIN_INTERVAL_MS = 80;
 
+/* Pick history cap – keeps localStorage usage bounded */
+const MAX_PICKS_PER_TOPIC = 100;
+
 const Storage = {
   /**
    * @returns {{
@@ -39,19 +42,37 @@ const Storage = {
 
   /** Migrate v1 data (topics as string arrays) to v2 (topic objects with entries + picks). */
   migrate(data) {
-    const migrated = { topics: {}, users: data.users || [] };
+    const migrated = {
+      topics: {},
+      users: Array.isArray(data.users)
+        ? data.users
+            .filter(u => u && typeof u === 'object' &&
+                         typeof u.id === 'string' &&
+                         typeof u.name === 'string' &&
+                         typeof u.colour === 'string')
+            .map(u => ({ ...u, colour: isValidColour(u.colour) ? u.colour : '#7c3aed' }))
+        : [],
+    };
     for (const [name, value] of Object.entries(data.topics || {})) {
       if (Array.isArray(value)) {
         /* v1 → v2: plain string array */
         migrated.topics[name] = {
-          entries: value.map(t => ({ text: t, userId: null })),
+          entries: value
+            .filter(t => typeof t === 'string')
+            .map(t => ({ text: t, userId: null })),
           picks: [],
         };
       } else if (value && typeof value === 'object') {
-        /* v2: ensure both arrays exist */
+        /* v2: ensure both arrays exist and contain valid elements */
         migrated.topics[name] = {
-          entries: value.entries || [],
-          picks:   value.picks   || [],
+          entries: Array.isArray(value.entries)
+            ? value.entries.filter(e => e && typeof e === 'object' && typeof e.text === 'string')
+            : [],
+          picks: Array.isArray(value.picks)
+            ? value.picks.filter(p => p && typeof p === 'object' &&
+                                      typeof p.text === 'string' &&
+                                      typeof p.timestamp === 'number')
+            : [],
         };
       }
     }
@@ -139,9 +160,10 @@ const App = (() => {
     const existing = state.users.find(u => u.name.toLowerCase() === trimmed.toLowerCase());
     if (existing) return { ok: false, msg: `"${existing.name}" already exists.` };
     const id = crypto.randomUUID();
-    state.users.push({ id, name: trimmed, colour });
+    const safeColour = isValidColour(colour) ? colour : '#7c3aed';
+    state.users.push({ id, name: trimmed, colour: safeColour });
     persist();
-    return { ok: true, user: { id, name: trimmed, colour } };
+    return { ok: true, user: { id, name: trimmed, colour: safeColour } };
   }
 
   function removeUser(id) {
@@ -162,6 +184,10 @@ const App = (() => {
     if (!topic) return;
     if (!topic.picks) topic.picks = [];
     topic.picks.push({ text: entry.text, userId: entry.userId || null, timestamp: Date.now() });
+    /* keep history bounded to avoid filling localStorage */
+    if (topic.picks.length > MAX_PICKS_PER_TOPIC) {
+      topic.picks.splice(0, topic.picks.length - MAX_PICKS_PER_TOPIC);
+    }
     persist();
   }
 
@@ -397,19 +423,21 @@ function renderPickHistoryHtml(picks) {
   if (!picks || picks.length === 0) {
     return '<p class="picks-empty">No picks yet.</p>';
   }
-  return [...picks].reverse().map(pick => {
-    const user    = pick.userId ? App.getUserById(pick.userId) : null;
-    const date    = new Date(pick.timestamp);
-    const timeStr = date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-    return `
-      <div class="pick-history-item">
-        <span class="pick-user-dot${user ? '' : ' pick-user-dot--none'}" ${user ? `style="background:${escapeAttr(user.colour)}"` : ''} aria-hidden="true"></span>
-        <span class="pick-entry-text">${escapeHtml(pick.text)}</span>
-        ${user ? `<span class="pick-user-name">${escapeHtml(user.name)}</span>` : ''}
-        <span class="pick-timestamp">${escapeHtml(timeStr)}</span>
-      </div>
-    `;
-  }).join('');
+  return [...picks].reverse().map(renderPickItemHtml).join('');
+}
+
+function renderPickItemHtml(pick) {
+  const user    = pick.userId ? App.getUserById(pick.userId) : null;
+  const date    = new Date(pick.timestamp);
+  const timeStr = date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  return `
+    <div class="pick-history-item">
+      <span class="pick-user-dot${user ? '' : ' pick-user-dot--none'}" ${user ? `style="background:${escapeAttr(user.colour)}"` : ''} aria-hidden="true"></span>
+      <span class="pick-entry-text">${escapeHtml(pick.text)}</span>
+      ${user ? `<span class="pick-user-name">${escapeHtml(user.name)}</span>` : ''}
+      <span class="pick-timestamp">${escapeHtml(timeStr)}</span>
+    </div>
+  `;
 }
 
 /* =========================================================
@@ -465,11 +493,20 @@ function runPicker(topic) {
         </div>
       `;
 
-      /* record the pick and update history panel */
+      /* record the pick and prepend to the history panel */
       App.recordPick(topic, winner);
       const historyEl = $('pick-history-list');
       if (historyEl) {
-        historyEl.innerHTML = renderPickHistoryHtml(App.getPickHistory(topic));
+        const picks = App.getPickHistory(topic);
+        if (picks.length === 1) {
+          /* first pick ever – replace the empty-state placeholder */
+          historyEl.innerHTML = renderPickItemHtml(picks[0]);
+        } else {
+          /* remove empty-state placeholder if present, then prepend new item */
+          const empty = historyEl.querySelector('.picks-empty');
+          if (empty) empty.remove();
+          historyEl.insertAdjacentHTML('afterbegin', renderPickItemHtml(picks[picks.length - 1]));
+        }
       }
 
       /* highlight matching entry */
@@ -489,7 +526,7 @@ function runPicker(topic) {
 }
 
 /* =========================================================
-   String Escaping (XSS prevention)
+   String Escaping & Colour Validation (XSS prevention)
    ========================================================= */
 function escapeHtml(str) {
   return String(str)
@@ -504,6 +541,16 @@ function escapeAttr(str) {
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;');
+}
+
+/**
+ * Returns true only for 6-digit hex colour strings (e.g. "#7c3aed").
+ * Used to validate colours before they are interpolated into style attributes,
+ * ensuring no CSS injection is possible via a crafted colour value.
+ * @param {string} colour
+ */
+function isValidColour(colour) {
+  return /^#[0-9a-fA-F]{6}$/.test(colour);
 }
 
 /* =========================================================

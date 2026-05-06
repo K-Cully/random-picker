@@ -19,6 +19,8 @@ Keeping CSS and JS in separate files respects the **separation of concerns** pri
 
 ## Persistence: localStorage
 
+_Date: 2026-05-06_ _(data shape updated — see also "User Management, Entry Attribution, and Pick History" below)_
+
 All data is stored exclusively in `localStorage` under a single namespaced key (`randomPickerData`). No network requests are ever made, satisfying the requirements for local-only storage and no user data/telemetry collection.
 
 Data shape (v2):
