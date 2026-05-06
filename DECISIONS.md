@@ -60,7 +60,7 @@ An animated "spinning" phase cycles through random entries for 18–29 iteration
 
 _Date: 2026-05-06_
 
-Added `.gitignore`, `.gitattributes`, and `.editorconfig` to the repository. `.gitignore` excludes OS-generated files (`.DS_Store`, `Thumbs.db`), editor/IDE artifacts, and log files. `.gitattributes` enforces consistent line endings and enables language-aware diffs. `.editorconfig` standardises basic formatting (UTF-8, LF line endings, 2-space indentation) across editors. These files are standard for collaborative repositories and reduce accidental noise in commits.
+Added `.gitignore`, `.gitattributes`, and `.editorconfig` to the repository. `.gitignore` excludes OS-generated files (`.DS_Store`, `Thumbs.db`), editor/IDE artifacts, and log files. `.gitattributes` enforces consistent line endings and marks files as text where appropriate for more consistent normalization and diffs. `.editorconfig` standardises basic formatting (UTF-8, LF line endings, 2-space indentation) across editors. These files are standard for collaborative repositories and reduce accidental noise in commits.
 
 ## Automated GitHub Pages Deployment via GitHub Actions
 
