@@ -20,29 +20,68 @@
   <div class="app-layout">
 
     <!-- Sidebar -->
-    <aside class="sidebar" aria-label="Topics">
-      <div class="sidebar-header">
-        <h2>Topics</h2>
-      </div>
+    <aside class="sidebar" aria-label="Topics and Users">
 
-      <div id="topic-list" class="topic-list" role="list" aria-label="Topic list">
-        <!-- rendered by JS -->
-      </div>
-
-      <form id="add-topic-form" class="add-topic-form" novalidate>
-        <div class="input-row">
-          <input
-            id="new-topic-input"
-            class="input-field"
-            type="text"
-            placeholder="New topic name…"
-            maxlength="100"
-            autocomplete="off"
-            aria-label="New topic name"
-          />
-          <button class="btn btn-primary btn-icon" type="submit" title="Add topic" aria-label="Add topic">＋</button>
+      <!-- Topics section -->
+      <div class="sidebar-section sidebar-topics">
+        <div class="sidebar-header">
+          <h2>Topics</h2>
         </div>
-      </form>
+
+        <div id="topic-list" class="topic-list" role="list" aria-label="Topic list">
+          <!-- rendered by JS -->
+        </div>
+
+        <form id="add-topic-form" class="add-topic-form" novalidate>
+          <div class="input-row">
+            <input
+              id="new-topic-input"
+              class="input-field"
+              type="text"
+              placeholder="New topic name…"
+              maxlength="100"
+              autocomplete="off"
+              aria-label="New topic name"
+            />
+            <button class="btn btn-primary btn-icon" type="submit" title="Add topic" aria-label="Add topic">＋</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Users section -->
+      <div class="sidebar-section sidebar-users">
+        <div class="sidebar-header">
+          <h2>Users</h2>
+        </div>
+
+        <div id="user-list" class="user-list" role="list" aria-label="User list">
+          <!-- rendered by JS -->
+        </div>
+
+        <form id="add-user-form" class="add-user-form" novalidate>
+          <div class="input-row">
+            <input
+              id="new-user-name"
+              class="input-field"
+              type="text"
+              placeholder="User name…"
+              maxlength="50"
+              autocomplete="off"
+              aria-label="New user name"
+            />
+            <input
+              id="new-user-colour"
+              type="color"
+              class="colour-picker"
+              value="#7c3aed"
+              aria-label="User colour"
+              title="Choose colour"
+            />
+            <button class="btn btn-primary btn-icon" type="submit" title="Add user" aria-label="Add user">＋</button>
+          </div>
+        </form>
+      </div>
+
     </aside>
 
     <!-- Main Content -->

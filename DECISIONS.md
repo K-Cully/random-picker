@@ -21,14 +21,27 @@ Keeping CSS and JS in separate files respects the **separation of concerns** pri
 
 All data is stored exclusively in `localStorage` under a single namespaced key (`randomPickerData`). No network requests are ever made, satisfying the requirements for local-only storage and no user data/telemetry collection.
 
-Data shape:
+Data shape (v2):
 ```json
 {
   "topics": {
-    "TopicName": ["entry1", "entry2", "..."]
-  }
+    "TopicName": {
+      "entries": [
+        { "text": "entry1", "userId": "abc123" },
+        { "text": "entry2", "userId": null }
+      ],
+      "picks": [
+        { "text": "entry1", "userId": "abc123", "timestamp": 1746527000000 }
+      ]
+    }
+  },
+  "users": [
+    { "id": "abc123", "name": "Alice", "colour": "#7c3aed" }
+  ]
 }
 ```
+
+On load, v1 data (topics as plain string arrays) is automatically migrated to the v2 shape: each string becomes `{ text, userId: null }` and an empty `picks` array is added.
 
 ## Random Selection
 
@@ -67,3 +80,17 @@ Added `.gitignore`, `.gitattributes`, and `.editorconfig` to the repository. `.g
 _Date: 2026-05-05_
 
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) automatically deploys the site to GitHub Pages on every push to `main`. The workflow uses the official `actions/deploy-pages` action with the newer "GitHub Actions" Pages source (Settings → Pages → Source → **GitHub Actions**). This ensures the live site stays in sync with the latest code on `main` without manual intervention. Only the public site assets (`index.html`, `css/`, `js/`) are included in the deployment artifact to avoid exposing internal files. Concurrent deployments are queued and run sequentially to ensure every push is deployed.
+
+## User Management, Entry Attribution, and Pick History
+
+_Date: 2026-05-06_
+
+Three related features were added together as they share data-structure concerns:
+
+1. **User addition** – A Users panel in the sidebar lets users create named entries with an associated hex colour (via `<input type="color">`). Users are stored in `state.users` as `{ id, name, colour }` objects. IDs are generated as a base-36 timestamp + random suffix to keep them short and collision-resistant without requiring a crypto API.
+
+2. **Entry attribution** – Entries are now stored as `{ text, userId }` objects instead of plain strings. When any users exist, a dropdown appears in the "Add entry" form so the submitter can optionally attribute the entry to a user. Deleting a user leaves existing entries and picks intact; the attribution is simply hidden in the UI (graceful degradation).
+
+3. **Selection memory** – Each time the picker settles on a winner, `recordPick` appends `{ text, userId, timestamp }` to the topic's `picks` array. A "Pick History" card in the topic view renders these records newest-first, showing the entry text, user colour dot + name (if attributed), and a locale-formatted timestamp.
+
+4. **Data migration** – `Storage.migrate` handles v1 data (topics stored as string arrays) transparently on load, so existing data is preserved without any manual user action.
