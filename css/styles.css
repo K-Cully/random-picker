@@ -20,8 +20,8 @@
   --clr-danger: #e85d75;
   --clr-danger-hover: #d94863;
   --clr-text: #15324b;
-  --clr-text-muted: #4b6f88;
-  --clr-text-faint: #7aa6bf;
+  --clr-text-muted: #365e78;
+  --clr-text-faint: #5f8298;
   --radius-sm: 14px;
   --radius-md: 18px;
   --radius-lg: 24px;
@@ -39,7 +39,7 @@ body {
   background:
     radial-gradient(circle at 12% 16%, rgba(255,209,102,0.75) 0 44px, transparent 45px),
     radial-gradient(circle at 88% 12%, rgba(59,182,255,0.45) 0 56px, transparent 57px),
-    radial-gradient(circle at 78% 82%, rgba(255,255,255,0.8) 0 34px, transparent 35px),
+    radial-gradient(circle at 78% 82%, rgba(255,255,255,0.38) 0 34px, transparent 35px),
     linear-gradient(180deg, #bfeaff 0%, var(--clr-bg) 45%, #fff4c7 100%);
   color: var(--clr-text);
   display: flex;
@@ -376,7 +376,7 @@ body {
   justify-content: center;
   gap: 6px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-xl);
   cursor: pointer;
   font-weight: 800;
   font-size: 0.875rem;
