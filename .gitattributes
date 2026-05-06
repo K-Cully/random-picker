@@ -1,0 +1,19 @@
+# Normalize line endings for all text files
+* text=auto
+
+# Explicitly declare text file types
+*.html text diff=html
+*.css  text diff=css
+*.js   text
+*.md   text diff=markdown
+*.yml  text
+*.yaml text
+*.json text
+
+# Denote binary file types
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.svg  text
