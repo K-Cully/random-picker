@@ -19,20 +19,70 @@ const MIN_SPINS = 18;
 const SPIN_VARIANCE = 12;
 const SPIN_INTERVAL_MS = 80;
 
+/* Pick history cap – keeps localStorage usage bounded */
+const MAX_PICKS_PER_TOPIC = 100;
+
+/* Default colour used when a stored/submitted colour fails hex validation */
+const DEFAULT_USER_COLOUR = '#7c3aed';
+
 const Storage = {
-  /** @returns {{ topics: Record<string, string[]> }} */
+  /**
+   * @returns {{
+   *   topics: Record<string, { entries: Array<{text:string, userId:string|null}>, picks: Array<{text:string, userId:string|null, timestamp:number}> }>,
+   *   users:  Array<{id:string, name:string, colour:string}>
+   * }}
+   */
   load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (parsed && typeof parsed === 'object') return parsed;
+        if (parsed && typeof parsed === 'object') return Storage.migrate(parsed);
       }
     } catch (_) { /* ignore parse errors */ }
-    return { topics: {} };
+    return { topics: {}, users: [] };
   },
 
-  /** @param {{ topics: Record<string, string[]> }} data */
+  /** Migrate v1 data (topics as string arrays) to v2 (topic objects with entries + picks). */
+  migrate(data) {
+    const migrated = {
+      topics: {},
+      users: Array.isArray(data.users)
+        ? data.users
+            .filter(u => u && typeof u === 'object' &&
+                         typeof u.id === 'string' &&
+                         typeof u.name === 'string' &&
+                         typeof u.colour === 'string')
+            .map(u => ({ ...u, colour: isValidColour(u.colour) ? u.colour : DEFAULT_USER_COLOUR }))
+        : [],
+    };
+    for (const [name, value] of Object.entries(data.topics || {})) {
+      if (Array.isArray(value)) {
+        /* v1 → v2: plain string array */
+        migrated.topics[name] = {
+          entries: value
+            .filter(t => typeof t === 'string')
+            .map(t => ({ text: t, userId: null })),
+          picks: [],
+        };
+      } else if (value && typeof value === 'object') {
+        /* v2: ensure both arrays exist and contain valid elements */
+        migrated.topics[name] = {
+          entries: Array.isArray(value.entries)
+            ? value.entries.filter(e => e && typeof e === 'object' && typeof e.text === 'string')
+            : [],
+          picks: Array.isArray(value.picks)
+            ? value.picks.filter(p => p && typeof p === 'object' &&
+                                      typeof p.text === 'string' &&
+                                      typeof p.timestamp === 'number')
+            : [],
+        };
+      }
+    }
+    return migrated;
+  },
+
+  /** @param {{ topics: object, users: Array }} data */
   save(data) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -44,7 +94,7 @@ const Storage = {
    App State & Logic
    ========================================================= */
 const App = (() => {
-  let state = Storage.load();     // { topics: { [name]: [entry, ...] } }
+  let state = Storage.load();     // { topics: { [name]: { entries: [...], picks: [...] } }, users: [...] }
   let activeTopic = null;
   let spinInterval = null;
 
@@ -68,7 +118,7 @@ const App = (() => {
       t => t.toLowerCase() === key
     );
     if (existing) return { ok: false, msg: `"${existing}" already exists.` };
-    state.topics[trimmed] = [];
+    state.topics[trimmed] = { entries: [], picks: [] };
     persist();
     return { ok: true, topic: trimmed };
   }
@@ -85,41 +135,77 @@ const App = (() => {
   }
 
   /* ---- entry operations ---- */
-  function addEntry(topicName, entry) {
-    const trimmed = entry.trim();
+  function addEntry(topicName, entryText, userId = null) {
+    const trimmed = entryText.trim();
     if (!trimmed) return { ok: false, msg: 'Entry cannot be empty.' };
-    const list = state.topics[topicName];
-    if (!list) return { ok: false, msg: 'Topic not found.' };
-    if (list.some(e => e.toLowerCase() === trimmed.toLowerCase())) {
+    const topic = state.topics[topicName];
+    if (!topic) return { ok: false, msg: 'Topic not found.' };
+    if (topic.entries.some(e => e.text.toLowerCase() === trimmed.toLowerCase())) {
       return { ok: false, msg: `"${trimmed}" is already in this topic.` };
     }
-    list.push(trimmed);
+    topic.entries.push({ text: trimmed, userId: userId || null });
     persist();
     return { ok: true, entry: trimmed };
   }
 
   function removeEntry(topicName, index) {
-    const list = state.topics[topicName];
-    if (!list || index < 0 || index >= list.length) return;
-    list.splice(index, 1);
+    const topic = state.topics[topicName];
+    if (!topic || index < 0 || index >= topic.entries.length) return;
+    topic.entries.splice(index, 1);
+    persist();
+  }
+
+  /* ---- user operations ---- */
+  function addUser(name, colour) {
+    const trimmed = name.trim();
+    if (!trimmed) return { ok: false, msg: 'User name cannot be empty.' };
+    if (!state.users) state.users = [];
+    const existing = state.users.find(u => u.name.toLowerCase() === trimmed.toLowerCase());
+    if (existing) return { ok: false, msg: `"${existing.name}" already exists.` };
+    const id = crypto.randomUUID();
+    const safeColour = isValidColour(colour) ? colour : DEFAULT_USER_COLOUR;
+    state.users.push({ id, name: trimmed, colour: safeColour });
+    persist();
+    return { ok: true, user: { id, name: trimmed, colour: safeColour } };
+  }
+
+  function removeUser(id) {
+    if (!state.users) return;
+    state.users = state.users.filter(u => u.id !== id);
     persist();
   }
 
   /* ---- selection ---- */
   function pickRandom(topicName) {
-    const list = state.topics[topicName];
-    if (!list || list.length === 0) return null;
-    return list[Math.floor(Math.random() * list.length)];
+    const topic = state.topics[topicName];
+    if (!topic || topic.entries.length === 0) return null;
+    return topic.entries[Math.floor(Math.random() * topic.entries.length)];
+  }
+
+  function recordPick(topicName, entry) {
+    const topic = state.topics[topicName];
+    if (!topic) return;
+    if (!topic.picks) topic.picks = [];
+    topic.picks.push({ text: entry.text, userId: entry.userId || null, timestamp: Date.now() });
+    /* keep history bounded to avoid filling localStorage */
+    if (topic.picks.length > MAX_PICKS_PER_TOPIC) {
+      topic.picks.splice(0, topic.picks.length - MAX_PICKS_PER_TOPIC);
+    }
+    persist();
   }
 
   /* ---- getters ---- */
   function getActiveTopic() { return activeTopic; }
-  function getEntries(topicName) { return state.topics[topicName] ?? []; }
+  function getEntries(topicName)     { return state.topics[topicName]?.entries ?? []; }
+  function getPickHistory(topicName) { return state.topics[topicName]?.picks   ?? []; }
+  function getUsers()                { return state.users || []; }
+  function getUserById(id)           { return (state.users || []).find(u => u.id === id) ?? null; }
 
   return {
     topicNames, addTopic, deleteTopic, selectTopic,
-    addEntry, removeEntry, pickRandom,
-    getActiveTopic, getEntries,
+    addEntry, removeEntry, pickRandom, recordPick,
+    addUser, removeUser, getUsers, getUserById,
+    getActiveTopic, getEntries, getPickHistory,
     get spinInterval() { return spinInterval; },
     set spinInterval(v) { spinInterval = v; },
   };
@@ -184,6 +270,38 @@ function renderTopicList() {
   });
 }
 
+function renderUserList() {
+  const list = $('user-list');
+  if (!list) return;
+  const users = App.getUsers();
+
+  if (users.length === 0) {
+    list.innerHTML = '<p class="users-empty">No users yet.</p>';
+    return;
+  }
+
+  list.innerHTML = '';
+  users.forEach(user => {
+    const item = document.createElement('div');
+    item.className = 'user-item';
+    item.dataset.userId = user.id;
+    item.innerHTML = `
+      <span class="user-dot" style="background:${escapeAttr(user.colour)}" aria-hidden="true"></span>
+      <span class="user-name">${escapeHtml(user.name)}</span>
+      <button class="btn-delete-user" data-user-id="${escapeAttr(user.id)}" title="Remove user" aria-label="Remove user ${escapeAttr(user.name)}">×</button>
+    `;
+
+    item.querySelector('.btn-delete-user').addEventListener('click', e => {
+      e.stopPropagation();
+      App.removeUser(user.id);
+      renderUserList();
+      renderMainContent();   /* refresh entry form user select */
+    });
+
+    list.appendChild(item);
+  });
+}
+
 function renderMainContent() {
   const main = $('main-content');
   const topic = App.getActiveTopic();
@@ -200,6 +318,14 @@ function renderMainContent() {
   }
 
   const entries = App.getEntries(topic);
+  const picks   = App.getPickHistory(topic);
+  const users   = App.getUsers();
+
+  const userSelectHtml = users.length > 0 ? `
+    <select id="new-entry-user" class="input-field entry-user-select" aria-label="Attribute to user">
+      <option value="">— no user —</option>
+      ${users.map(u => `<option value="${escapeAttr(u.id)}">${escapeHtml(u.name)}</option>`).join('')}
+    </select>` : '';
 
   main.innerHTML = `
     <div class="topic-view">
@@ -236,11 +362,20 @@ function renderMainContent() {
             maxlength="200"
             autocomplete="off"
           />
+          ${userSelectHtml}
           <button class="btn btn-primary" type="submit">Add</button>
         </form>
 
         <div id="entries-list" class="entries-list" style="margin-top:12px">
           ${renderEntriesHtml(topic, entries)}
+        </div>
+      </div>
+
+      <!-- Pick History -->
+      <div class="card">
+        <p class="card-title">📜 Pick History</p>
+        <div id="pick-history-list" class="pick-history-list">
+          ${renderPickHistoryHtml(picks)}
         </div>
       </div>
     </div>
@@ -249,8 +384,10 @@ function renderMainContent() {
   /* Wire up entry form */
   $('add-entry-form').addEventListener('submit', e => {
     e.preventDefault();
-    const input = $('new-entry-input');
-    const result = App.addEntry(topic, input.value);
+    const input      = $('new-entry-input');
+    const userSelect = $('new-entry-user');
+    const userId     = userSelect ? (userSelect.value || null) : null;
+    const result = App.addEntry(topic, input.value, userId);
     if (!result.ok) { showToast(result.msg); return; }
     input.value = '';
     input.focus();
@@ -266,18 +403,44 @@ function renderEntriesHtml(topic, entries) {
   if (entries.length === 0) {
     return '<p class="entries-empty">No entries yet. Add your first one above!</p>';
   }
-  return entries.map((entry, idx) => `
-    <div class="entry-item" data-index="${idx}" id="entry-${idx}">
-      <span class="entry-number">${idx + 1}</span>
-      <span class="entry-name">${escapeHtml(entry)}</span>
-      <button
-        class="btn-delete-entry"
-        data-index="${idx}"
-        title="Remove entry"
-        aria-label="Remove ${escapeAttr(entry)}"
-      >🗑</button>
+  return entries.map((entry, idx) => {
+    const user = entry.userId ? App.getUserById(entry.userId) : null;
+    return `
+      <div class="entry-item" data-index="${idx}" id="entry-${idx}">
+        <span class="entry-number">${idx + 1}</span>
+        ${user ? `<span class="entry-user-dot" style="background:${escapeAttr(user.colour)}" title="${escapeAttr(user.name)}" aria-label="User: ${escapeAttr(user.name)}"></span>` : ''}
+        <span class="entry-name">${escapeHtml(entry.text)}</span>
+        ${user ? `<span class="entry-user-name">${escapeHtml(user.name)}</span>` : ''}
+        <button
+          class="btn-delete-entry"
+          data-index="${idx}"
+          title="Remove entry"
+          aria-label="Remove ${escapeAttr(entry.text)}"
+        >🗑</button>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPickHistoryHtml(picks) {
+  if (!picks || picks.length === 0) {
+    return '<p class="picks-empty">No picks yet.</p>';
+  }
+  return [...picks].reverse().map(renderPickItemHtml).join('');
+}
+
+function renderPickItemHtml(pick) {
+  const user    = pick.userId ? App.getUserById(pick.userId) : null;
+  const date    = new Date(pick.timestamp);
+  const timeStr = date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  return `
+    <div class="pick-history-item">
+      <span class="pick-user-dot${user ? '' : ' pick-user-dot--none'}" ${user ? `style="background:${escapeAttr(user.colour)}"` : ''} aria-hidden="true"></span>
+      <span class="pick-entry-text">${escapeHtml(pick.text)}</span>
+      ${user ? `<span class="pick-user-name">${escapeHtml(user.name)}</span>` : ''}
+      <span class="pick-timestamp">${escapeHtml(timeStr)}</span>
     </div>
-  `).join('');
+  `;
 }
 
 /* =========================================================
@@ -307,7 +470,6 @@ function runPicker(topic) {
   /* spinning phase */
   let spins = 0;
   const totalSpins = MIN_SPINS + Math.floor(Math.random() * SPIN_VARIANCE);
-  let current = '';
 
   resultEl.innerHTML = '<span class="result-text result-spinning">…</span>';
   const spinEl = resultEl.querySelector('.result-text');
@@ -316,19 +478,43 @@ function runPicker(topic) {
     spins++;
     const pick = App.pickRandom(topic);
     if (spins < totalSpins) {
-      spinEl.textContent = pick;
+      if (pick) spinEl.textContent = pick.text;
     } else {
       clearInterval(App.spinInterval);
       App.spinInterval = null;
 
       /* final pick */
       const winner = App.pickRandom(topic);
-      current = winner;
-      resultEl.innerHTML = `<span class="result-text">${escapeHtml(winner)}</span>`;
+      if (!winner) { pickBtn.disabled = false; return; }
+
+      const user = winner.userId ? App.getUserById(winner.userId) : null;
+      resultEl.innerHTML = `
+        <div class="winner-display">
+          ${user ? `<span class="winner-user-dot" style="background:${escapeAttr(user.colour)}" aria-hidden="true"></span>` : ''}
+          <span class="result-text">${escapeHtml(winner.text)}</span>
+          ${user ? `<span class="winner-user-name">${escapeHtml(user.name)}</span>` : ''}
+        </div>
+      `;
+
+      /* record the pick and prepend to the history panel */
+      App.recordPick(topic, winner);
+      const historyEl = $('pick-history-list');
+      if (historyEl) {
+        const picks = App.getPickHistory(topic);
+        if (picks.length === 1) {
+          /* first pick ever – replace the empty-state placeholder */
+          historyEl.innerHTML = renderPickItemHtml(picks[0]);
+        } else {
+          /* remove empty-state placeholder if present, then prepend new item */
+          const empty = historyEl.querySelector('.picks-empty');
+          if (empty) empty.remove();
+          historyEl.insertAdjacentHTML('afterbegin', renderPickItemHtml(picks[picks.length - 1]));
+        }
+      }
 
       /* highlight matching entry */
-      const currentEntries = App.getEntries(topic);
-      const idx = currentEntries.indexOf(winner);
+      const topicEntries = App.getEntries(topic);
+      const idx = topicEntries.indexOf(winner);
       if (idx !== -1) {
         const entryEl = document.getElementById(`entry-${idx}`);
         if (entryEl) {
@@ -343,7 +529,7 @@ function runPicker(topic) {
 }
 
 /* =========================================================
-   String Escaping (XSS prevention)
+   String Escaping & Colour Validation (XSS prevention)
    ========================================================= */
 function escapeHtml(str) {
   return String(str)
@@ -358,6 +544,16 @@ function escapeAttr(str) {
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/"/g, '&quot;');
+}
+
+/**
+ * Returns true only for 6-digit hex colour strings (e.g. "#7c3aed").
+ * Used to validate colours before they are interpolated into style attributes,
+ * ensuring no CSS injection is possible via a crafted colour value.
+ * @param {string} colour
+ */
+function isValidColour(colour) {
+  return /^#[0-9a-fA-F]{6}$/.test(colour);
 }
 
 /* =========================================================
@@ -377,6 +573,19 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast(`Topic "${result.topic}" created!`, 'success');
   });
 
+  /* Add User form */
+  $('add-user-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const nameInput   = $('new-user-name');
+    const colourInput = $('new-user-colour');
+    const result = App.addUser(nameInput.value, colourInput.value);
+    if (!result.ok) { showToast(result.msg); return; }
+    nameInput.value = '';
+    renderUserList();
+    renderMainContent();   /* refresh entry form user select */
+    showToast(`User "${result.user.name}" added!`, 'success');
+  });
+
   /* Delete-entry delegation (re-attached inside renderMainContent via event listeners,
      but also handle dynamically rendered buttons via delegation on main-content) */
   $('main-content').addEventListener('click', e => {
@@ -392,5 +601,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Initial render */
   renderTopicList();
+  renderUserList();
   renderMainContent();
 });
