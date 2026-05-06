@@ -21,7 +21,7 @@
   --clr-danger-hover: #d94863;
   --clr-text: #15324b;
   --clr-text-muted: #365e78;
-  --clr-text-faint: #466a7f;
+  --clr-text-faint: #31566e;
   --radius-sm: 14px;
   --radius-md: 18px;
   --radius-lg: 24px;
@@ -462,7 +462,6 @@ body {
 
 .empty-state .empty-icon {
   font-size: 4rem;
-  opacity: 0.9;
   filter: drop-shadow(0 5px 0 rgba(20,121,201,0.14));
 }
 
