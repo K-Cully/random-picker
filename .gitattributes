@@ -10,6 +10,7 @@
 *.yml  text
 *.yaml text
 *.json text
+*.svg  text
 
 # Denote binary file types
 *.png  binary
@@ -17,4 +18,3 @@
 *.jpeg binary
 *.gif  binary
 *.ico  binary
-*.svg  text
