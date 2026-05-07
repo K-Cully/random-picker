@@ -47,3 +47,9 @@ The `DECISIONS.md` file records key technical and design decisions for the proje
 - Never introduce third-party scripts, tracking, analytics, or telemetry.
 - Never make network requests from the application.
 - All data must remain local to the user's browser.
+
+## PR Evidence for UI/Style Changes
+
+- For any PR that changes UI, layout, or styling (`index.html`, `css/styles.css`, or UI-rendering code in `js/app.js`), capture screenshot evidence with the MCP browser tools before finalizing.
+- Use the MCP browser flow (`playwright-browser_navigate` + `playwright-browser_take_screenshot`) against the local app (`index.html`) to show the updated UI state for PR evidence before merge.
+- Include the screenshot artifact(s) in the PR evidence/report so reviewers can verify visual changes without pulling the branch.
