@@ -76,6 +76,10 @@ const Storage = {
                                       typeof p.text === 'string' &&
                                       typeof p.timestamp === 'number')
             : [],
+          fairMode: !!value.fairMode,
+          fairModePickedUserIds: Array.isArray(value.fairModePickedUserIds)
+            ? value.fairModePickedUserIds.filter(id => typeof id === 'string')
+            : [],
         };
       }
     }
@@ -118,7 +122,7 @@ const App = (() => {
       t => t.toLowerCase() === key
     );
     if (existing) return { ok: false, msg: `"${existing}" already exists.` };
-    state.topics[trimmed] = { entries: [], picks: [] };
+    state.topics[trimmed] = { entries: [], picks: [], fairMode: false, fairModePickedUserIds: [] };
     persist();
     return { ok: true, topic: trimmed };
   }
@@ -179,7 +183,22 @@ const App = (() => {
   function pickRandom(topicName) {
     const topic = state.topics[topicName];
     if (!topic || topic.entries.length === 0) return null;
-    return topic.entries[Math.floor(Math.random() * topic.entries.length)];
+
+    if (!topic.fairMode) {
+      return topic.entries[Math.floor(Math.random() * topic.entries.length)];
+    }
+
+    /* Fair mode: exclude entries whose userId is already picked this round */
+    const pickedIds = topic.fairModePickedUserIds || [];
+    let eligible = topic.entries.filter(e => !e.userId || !pickedIds.includes(e.userId));
+
+    /* If no eligible entries remain (all users picked), reset the round */
+    if (eligible.length === 0) {
+      topic.fairModePickedUserIds = [];
+      eligible = topic.entries;
+    }
+
+    return eligible[Math.floor(Math.random() * eligible.length)];
   }
 
   function recordPick(topicName, entry) {
@@ -191,7 +210,39 @@ const App = (() => {
     if (topic.picks.length > MAX_PICKS_PER_TOPIC) {
       topic.picks.splice(0, topic.picks.length - MAX_PICKS_PER_TOPIC);
     }
+
+    /* Fair mode: track the user who was just picked */
+    if (topic.fairMode && entry.userId) {
+      if (!topic.fairModePickedUserIds) topic.fairModePickedUserIds = [];
+      if (!topic.fairModePickedUserIds.includes(entry.userId)) {
+        topic.fairModePickedUserIds.push(entry.userId);
+      }
+      /* Check if all users with entries have been picked – if so, reset */
+      const userIdsInTopic = [...new Set(
+        topic.entries.map(e => e.userId).filter(Boolean)
+      )];
+      if (userIdsInTopic.length > 0 && userIdsInTopic.every(id => topic.fairModePickedUserIds.includes(id))) {
+        topic.fairModePickedUserIds = [];
+      }
+    }
+
     persist();
+  }
+
+  /* ---- fair mode ---- */
+  function setFairMode(topicName, enabled) {
+    const topic = state.topics[topicName];
+    if (!topic) return;
+    topic.fairMode = !!enabled;
+    if (!enabled) {
+      topic.fairModePickedUserIds = [];
+    }
+    persist();
+  }
+
+  function isFairMode(topicName) {
+    const topic = state.topics[topicName];
+    return topic ? !!topic.fairMode : false;
   }
 
   /* ---- getters ---- */
@@ -206,6 +257,7 @@ const App = (() => {
     addEntry, removeEntry, pickRandom, recordPick,
     addUser, removeUser, getUsers, getUserById,
     getActiveTopic, getEntries, getPickHistory,
+    setFairMode, isFairMode,
     get spinInterval() { return spinInterval; },
     set spinInterval(v) { spinInterval = v; },
   };
@@ -346,6 +398,10 @@ function renderMainContent() {
           <button class="btn btn-accent" id="btn-pick" ${entries.length === 0 ? 'disabled' : ''}>
             🐾 Pick!
           </button>
+          <label class="fair-mode-toggle" title="Fair mode ensures each user is picked before any user is repeated">
+            <input type="checkbox" id="fair-mode-checkbox" ${App.isFairMode(topic) ? 'checked' : ''} />
+            <span class="fair-mode-label">Fair mode</span>
+          </label>
         </div>
       </div>
 
@@ -397,6 +453,11 @@ function renderMainContent() {
 
   /* Wire up pick button */
   $('btn-pick').addEventListener('click', () => runPicker(topic));
+
+  /* Wire up fair mode toggle */
+  $('fair-mode-checkbox').addEventListener('change', e => {
+    App.setFairMode(topic, e.target.checked);
+  });
 }
 
 function renderEntriesHtml(topic, entries) {
