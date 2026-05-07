@@ -359,11 +359,13 @@ body {
 
 .input-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .input-field {
-  flex: 1;
+  flex: 1 1 120px;
+  min-width: 0;
   background: var(--clr-input-bg);
   border: 2px solid var(--clr-border);
   border-radius: var(--radius-sm);
@@ -535,7 +537,12 @@ body {
 /* ---------- Add Entry Form ---------- */
 .add-entry-form {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.add-entry-form .btn {
+  flex: 0 0 auto;
 }
 
 /* ---------- Entries List ---------- */
@@ -887,5 +894,9 @@ body {
 
   .topic-item {
     flex-shrink: 0;
+  }
+
+  .add-entry-form .btn[type="submit"] {
+    flex: 1 1 100%;
   }
 }

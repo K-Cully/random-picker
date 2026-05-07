@@ -118,3 +118,9 @@ Implementation details:
 - The round resets when all distinct user IDs present in the topic's entries have been picked.
 - Toggling fair mode off clears the tracking array.
 - State is persisted in localStorage alongside existing topic data.
+
+## Responsive Add-Entry / Add-User / Add-Topic Forms
+
+_Date: 2026-05-07_
+
+Made the add-entry form (`.add-entry-form`) and the sidebar input rows (`.input-row`) wrap on narrow viewports so the **Add** button is never pushed off-screen on mobile. Specifically, `flex-wrap: wrap` is enabled on both rows; `.input-field` uses `flex: 1 1 120px` with `min-width: 0` so inputs can shrink and reflow instead of overflowing; and on viewports ≤ 480px the entry form's submit button stretches to full width on its own row for an easier mobile tap target. Rationale: the previous fixed single-row flex layout assumed enough horizontal space for input + user-select + button, which fails on phone-width screens. Wrapping is preferred over horizontal scrolling for accessibility and usability.
