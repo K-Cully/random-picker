@@ -551,7 +551,11 @@ function runPicker(topic) {
 
       /* final pick */
       const winner = App.pickRandom(topic);
-      if (!winner) { pickBtn.disabled = false; if (fairModeCheckbox) fairModeCheckbox.disabled = false; return; }
+      if (!winner) {
+        pickBtn.disabled = false;
+        if (fairModeCheckbox) fairModeCheckbox.disabled = false;
+        return;
+      }
 
       const user = winner.userId ? App.getUserById(winner.userId) : null;
       resultEl.innerHTML = `
