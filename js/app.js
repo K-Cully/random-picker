@@ -64,6 +64,8 @@ const Storage = {
             .filter(t => typeof t === 'string')
             .map(t => ({ text: t, userId: null })),
           picks: [],
+          fairMode: false,
+          fairModePickedUserIds: [],
         };
       } else if (value && typeof value === 'object') {
         /* v2: ensure both arrays exist and contain valid elements */
@@ -190,15 +192,12 @@ const App = (() => {
 
     /* Fair mode: exclude entries whose userId is already picked this round */
     const pickedIds = topic.fairModePickedUserIds || [];
-    let eligible = topic.entries.filter(e => !e.userId || !pickedIds.includes(e.userId));
+    const eligible = topic.entries.filter(e => !e.userId || !pickedIds.includes(e.userId));
 
-    /* If no eligible entries remain (all users picked), reset the round */
-    if (eligible.length === 0) {
-      topic.fairModePickedUserIds = [];
-      eligible = topic.entries;
-    }
+    /* If no eligible entries remain, fall back to full list (round will reset in recordPick) */
+    const pool = eligible.length > 0 ? eligible : topic.entries;
 
-    return eligible[Math.floor(Math.random() * eligible.length)];
+    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   function recordPick(topicName, entry) {
@@ -214,15 +213,17 @@ const App = (() => {
     /* Fair mode: track the user who was just picked */
     if (topic.fairMode && entry.userId) {
       if (!topic.fairModePickedUserIds) topic.fairModePickedUserIds = [];
-      if (!topic.fairModePickedUserIds.includes(entry.userId)) {
-        topic.fairModePickedUserIds.push(entry.userId);
-      }
-      /* Check if all users with entries have been picked – if so, reset */
+
+      /* If all users were already picked, reset the round before tracking */
       const userIdsInTopic = [...new Set(
         topic.entries.map(e => e.userId).filter(Boolean)
       )];
       if (userIdsInTopic.length > 0 && userIdsInTopic.every(id => topic.fairModePickedUserIds.includes(id))) {
         topic.fairModePickedUserIds = [];
+      }
+
+      if (!topic.fairModePickedUserIds.includes(entry.userId)) {
+        topic.fairModePickedUserIds.push(entry.userId);
       }
     }
 
@@ -523,6 +524,10 @@ function runPicker(topic) {
 
   pickBtn.disabled = true;
 
+  /* disable fair mode toggle during spin */
+  const fairModeCheckbox = $('fair-mode-checkbox');
+  if (fairModeCheckbox) fairModeCheckbox.disabled = true;
+
   /* clear previous highlights */
   document.querySelectorAll('.entry-item.highlighted').forEach(el =>
     el.classList.remove('highlighted')
@@ -546,7 +551,7 @@ function runPicker(topic) {
 
       /* final pick */
       const winner = App.pickRandom(topic);
-      if (!winner) { pickBtn.disabled = false; return; }
+      if (!winner) { pickBtn.disabled = false; if (fairModeCheckbox) fairModeCheckbox.disabled = false; return; }
 
       const user = winner.userId ? App.getUserById(winner.userId) : null;
       resultEl.innerHTML = `
@@ -585,6 +590,7 @@ function runPicker(topic) {
       }
 
       pickBtn.disabled = false;
+      if (fairModeCheckbox) fairModeCheckbox.disabled = false;
     }
   }, SPIN_INTERVAL_MS);
 }
