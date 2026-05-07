@@ -545,12 +545,6 @@ body {
   flex: 0 0 auto;
 }
 
-@media (max-width: 480px) {
-  .add-entry-form .btn[type="submit"] {
-    flex: 1 1 100%;
-  }
-}
-
 /* ---------- Entries List ---------- */
 .entries-list {
   display: flex;
@@ -877,5 +871,9 @@ body {
 
   .topic-item {
     flex-shrink: 0;
+  }
+
+  .add-entry-form .btn[type="submit"] {
+    flex: 1 1 100%;
   }
 }
