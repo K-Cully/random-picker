@@ -103,3 +103,18 @@ _Date: 2026-05-06_
 
 **Replaced stacked sidebar sections with a tab-based interface (Topics / Users)**  
 Rationale: The previous layout stacked the Topics and Users panels vertically within a fixed-width sidebar. When both panels had content the Users section would overlap or compress the Topics list, making the UI confusing. A tab interface shows one panel at a time, eliminates the overlap issue, and gives each panel the full vertical space of the sidebar. Tabs use ARIA `role="tablist"` / `role="tab"` / `role="tabpanel"` for accessibility.
+
+## Fair Mode (Pseudo-Random Selection)
+
+_Date: 2026-05-07_
+
+**Added per-topic "Fair mode" toggle that ensures each user is selected before any user is repeated.**
+
+Rationale: Pure random selection can lead to unfair distribution in small groups — one user may be picked repeatedly while others are skipped. Fair mode addresses this by tracking which users have already been picked in the current round. Entries attributed to already-picked users are excluded from the candidate pool until every user with entries in the topic has been selected. Once all users have been picked, the round resets automatically.
+
+Implementation details:
+- Each topic stores `fairMode` (boolean) and `fairModePickedUserIds` (array of user IDs already picked this round).
+- Entries with no user attribution (`userId: null`) are always eligible regardless of fair mode state.
+- The round resets when all distinct user IDs present in the topic's entries have been picked.
+- Toggling fair mode off clears the tracking array.
+- State is persisted in localStorage alongside existing topic data.
