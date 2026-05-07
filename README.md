@@ -1,4 +1,4 @@
-# 🎲 Random Picker
+# 🐾 Random Picker
 
 A lightweight, browser-based single page application for random selection. Create topics, fill them with entries, and let fate decide!
 
@@ -32,7 +32,7 @@ No installation, build step, or internet connection required.
 3. **Add a user** – type a name, choose a colour, and press **+** in the Users panel.
 4. **Add entries** – type in the entry input, optionally select a user from the dropdown, and press **Add** or Enter.
 5. **Remove an entry** – hover over it and click the 🗑 button.
-6. **Pick!** – click the **🎲 Pick!** button to spin and reveal a random entry.
+6. **Pick!** – click the **🐾 Pick!** button to spin and reveal a random entry.
 7. **View pick history** – the Pick History card shows every pick with timestamp and user.
 8. **Delete a topic** – hover over a topic in the sidebar and click **×**.
 

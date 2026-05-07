@@ -309,7 +309,7 @@ function renderMainContent() {
   if (!topic) {
     main.innerHTML = `
       <div class="empty-state">
-        <span class="empty-icon" aria-hidden="true">🎲</span>
+        <span class="empty-icon" aria-hidden="true">🐾</span>
         <h2>Pick something random!</h2>
         <p>Select a topic from the sidebar or create a new one to get started.</p>
       </div>
@@ -344,7 +344,7 @@ function renderMainContent() {
         </div>
         <div class="picker-actions">
           <button class="btn btn-accent" id="btn-pick" ${entries.length === 0 ? 'disabled' : ''}>
-            🎲 Pick!
+            🐾 Pick!
           </button>
         </div>
       </div>
