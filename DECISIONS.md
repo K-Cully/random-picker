@@ -103,3 +103,9 @@ _Date: 2026-05-06_
 
 **Replaced stacked sidebar sections with a tab-based interface (Topics / Users)**  
 Rationale: The previous layout stacked the Topics and Users panels vertically within a fixed-width sidebar. When both panels had content the Users section would overlap or compress the Topics list, making the UI confusing. A tab interface shows one panel at a time, eliminates the overlap issue, and gives each panel the full vertical space of the sidebar. Tabs use ARIA `role="tablist"` / `role="tab"` / `role="tabpanel"` for accessibility.
+
+## Responsive Add-Entry / Add-User / Add-Topic Forms
+
+_Date: 2026-05-07_
+
+Made the add-entry form (`.add-entry-form`) and the sidebar input rows (`.input-row`) wrap on narrow viewports so the **Add** button is never pushed off-screen on mobile. Specifically, `flex-wrap: wrap` is enabled on both rows; `.input-field` uses `flex: 1 1 120px` with `min-width: 0` so inputs can shrink and reflow instead of overflowing; and on viewports ≤ 480px the entry form's submit button stretches to full width on its own row for an easier mobile tap target. Rationale: the previous fixed single-row flex layout assumed enough horizontal space for input + user-select + button, which fails on phone-width screens. Wrapping is preferred over horizontal scrolling for accessibility and usability.
