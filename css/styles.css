@@ -552,7 +552,7 @@ body {
 }
 
 .btn-clear-history:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
