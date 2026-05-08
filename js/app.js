@@ -264,6 +264,13 @@ const App = (() => {
     persist();
   }
 
+  function clearPickHistory(topicName) {
+    const topic = state.topics[topicName];
+    if (!topic) return;
+    topic.picks = [];
+    persist();
+  }
+
   /* ---- fair mode ---- */
   function setFairMode(topicName, enabled) {
     const topic = state.topics[topicName];
@@ -290,7 +297,7 @@ const App = (() => {
   return {
     topicNames, addTopic, deleteTopic, selectTopic,
     addEntry, removeEntry, deactivateEntry, toggleEntryActive,
-    pickRandom, recordPick,
+    pickRandom, recordPick, clearPickHistory,
     addUser, removeUser, getUsers, getUserById,
     getActiveTopic, getEntries, getActiveEntries, getPickHistory,
     setFairMode, isFairMode,
@@ -469,7 +476,17 @@ function renderMainContent() {
 
       <!-- Pick History -->
       <div class="card">
-        <p class="card-title">📜 Pick History</p>
+        <div class="pick-history-header">
+          <p class="card-title">📜 Pick History</p>
+          <button
+            class="btn btn-ghost btn-clear-history"
+            id="btn-clear-history"
+            type="button"
+            aria-label="Clear pick history for ${escapeAttr(topic)}"
+            aria-disabled="${picks.length === 0}"
+            ${picks.length === 0 ? 'disabled' : ''}
+          >🧼 Clear history</button>
+        </div>
         <div id="pick-history-list" class="pick-history-list">
           ${renderPickHistoryHtml(picks)}
         </div>
@@ -497,6 +514,14 @@ function renderMainContent() {
   /* Wire up fair mode toggle */
   $('fair-mode-checkbox').addEventListener('change', e => {
     App.setFairMode(topic, e.target.checked);
+  });
+
+  $('btn-clear-history').addEventListener('click', () => {
+    const safeTopicName = JSON.stringify(topic.replace(/\s+/g, ' ').trim());
+    if (!confirm(`Clear pick history for topic: ${safeTopicName}?`)) return;
+    App.clearPickHistory(topic);
+    showToast('Pick history cleared.', 'success');
+    renderMainContent();
   });
 }
 

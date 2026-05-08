@@ -34,7 +34,8 @@ No installation, build step, or internet connection required.
 5. **Remove an entry** – hover over it and click the 🗑 button.
 6. **Pick!** – click the **🐾 Pick!** button to spin and reveal a random entry.
 7. **View pick history** – the Pick History card shows every pick with timestamp and user.
-8. **Delete a topic** – hover over a topic in the sidebar and click **×**.
+8. **Clear pick history** – click **🧼 Clear history** in a topic and confirm to remove that topic's history.
+9. **Delete a topic** – hover over a topic in the sidebar and click **×**.
 
 ## Structure
 

@@ -535,6 +535,28 @@ body {
   margin-bottom: 16px;
 }
 
+.pick-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pick-history-header .card-title {
+  margin-bottom: 0;
+}
+
+.btn-clear-history {
+  font-size: 0.75rem;
+  padding: 6px 12px;
+}
+
+.btn-clear-history:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ---------- Add Entry Form ---------- */
 .add-entry-form {
   display: flex;
@@ -984,6 +1006,11 @@ body {
   }
 
   .topic-view-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pick-history-header {
     flex-direction: column;
     align-items: flex-start;
   }
