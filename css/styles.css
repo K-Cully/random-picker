@@ -783,18 +783,80 @@ body {
 .fair-mode-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
   font-size: 0.85rem;
   color: var(--clr-text-muted);
   user-select: none;
 }
 
+.fair-mode-toggle:has(input[type="checkbox"]:disabled) {
+  cursor: not-allowed;
+}
+
+/* Visually hide the native checkbox while keeping it accessible */
 .fair-mode-toggle input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--clr-primary);
-  cursor: pointer;
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Custom circular indicator */
+.fair-mode-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--clr-primary);
+  background: #fff;
+  flex-shrink: 0;
+  position: relative;
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+/* Checkmark drawn with a border trick */
+.fair-mode-indicator::after {
+  content: '';
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 11px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* Checked state: blue circle with orange glow */
+.fair-mode-toggle input[type="checkbox"]:checked + .fair-mode-indicator {
+  background: var(--clr-primary);
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.5);
+}
+
+.fair-mode-toggle input[type="checkbox"]:checked + .fair-mode-indicator::after {
+  display: block;
+}
+
+/* Keyboard focus ring */
+.fair-mode-toggle input[type="checkbox"]:focus-visible + .fair-mode-indicator {
+  outline: 2.5px solid var(--clr-primary);
+  outline-offset: 3px;
+}
+
+/* Disabled state (during spin) */
+.fair-mode-toggle input[type="checkbox"]:disabled + .fair-mode-indicator {
+  opacity: 0.5;
+}
+
+.fair-mode-toggle input[type="checkbox"]:disabled ~ .fair-mode-label {
+  opacity: 0.5;
 }
 
 .fair-mode-label {

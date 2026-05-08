@@ -401,6 +401,7 @@ function renderMainContent() {
           </button>
           <label class="fair-mode-toggle" title="Fair mode ensures each user is picked before any user is repeated">
             <input type="checkbox" id="fair-mode-checkbox" ${App.isFairMode(topic) ? 'checked' : ''} />
+            <span class="fair-mode-indicator" aria-hidden="true"></span>
             <span class="fair-mode-label">Fair mode</span>
           </label>
         </div>
