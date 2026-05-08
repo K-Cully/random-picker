@@ -29,6 +29,7 @@
   --clr-card-bg: rgba(255,255,255,0.92);
   --clr-card-border: rgba(20,121,201,0.18);
   --clr-primary-glow: rgba(20,121,201,0.14);
+  --clr-accent-glow: rgba(255,209,102,0.5);
   --clr-focus-glow: rgba(20,121,201,0.35);
   --radius-sm: 14px;
   --radius-md: 18px;
@@ -837,7 +838,7 @@ body {
 .fair-mode-toggle input[type="checkbox"]:checked + .fair-mode-indicator {
   background: var(--clr-primary);
   border-color: var(--clr-primary);
-  box-shadow: 0 0 0 3px rgba(255, 209, 102, 0.5);
+  box-shadow: 0 0 0 3px var(--clr-accent-glow);
 }
 
 .fair-mode-toggle input[type="checkbox"]:checked + .fair-mode-indicator::after {

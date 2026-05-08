@@ -110,7 +110,7 @@ _Date: 2026-05-08_
 
 **Replaced the native browser checkbox on the "Fair mode" toggle with a custom circular indicator styled to match the application theme.**
 
-Rationale: The default browser checkbox rendered as a grey square that clashed with the app's rounded, colourful aesthetic. The custom indicator uses a CSS-only approach: the native `<input type="checkbox">` is visually hidden (but remains in the DOM for accessibility and keyboard navigation), and a sibling `<span class="fair-mode-indicator">` is styled as a circle using `border-radius: 50%`. Unchecked state shows a white circle with a blue border; checked state shows a solid blue circle with a white checkmark and an orange glow ring (using `var(--clr-accent)`), consistent with the app's blue/orange colour palette. Focus-visible and disabled states are also handled.
+Rationale: The default browser checkbox rendered as a grey square that clashed with the app's rounded, colourful aesthetic. The custom indicator uses a CSS-only approach: the native `<input type="checkbox">` is visually hidden (but remains in the DOM for accessibility and keyboard navigation), and a sibling `<span class="fair-mode-indicator">` is styled as a circle using `border-radius: 50%`. Unchecked state shows a white circle with a blue border; checked state shows a solid blue circle with a white checkmark and an orange glow ring (using `var(--clr-accent-glow)`, a new semi-transparent variant of `--clr-accent` added to `:root`), consistent with the app's blue/orange colour palette. Focus-visible and disabled states are also handled.
 
 ## Fair Mode (Pseudo-Random Selection)
 
