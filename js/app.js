@@ -483,6 +483,7 @@ function renderMainContent() {
             id="btn-clear-history"
             type="button"
             aria-label="Clear pick history for ${escapeAttr(topic)}"
+            aria-disabled="${picks.length === 0}"
             ${picks.length === 0 ? 'disabled' : ''}
           >🧼 Clear history</button>
         </div>
