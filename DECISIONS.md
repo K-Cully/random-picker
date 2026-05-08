@@ -124,3 +124,20 @@ Implementation details:
 _Date: 2026-05-07_
 
 Made the add-entry form (`.add-entry-form`) and the sidebar input rows (`.input-row`) wrap on narrow viewports so the **Add** button is never pushed off-screen on mobile. Specifically, `flex-wrap: wrap` is enabled on both rows; `.input-field` uses `flex: 1 1 120px` with `min-width: 0` so inputs can shrink and reflow instead of overflowing; and on viewports ≤ 480px the entry form's submit button stretches to full width on its own row for an easier mobile tap target. Rationale: the previous fixed single-row flex layout assumed enough horizontal space for input + user-select + button, which fails on phone-width screens. Wrapping is preferred over horizontal scrolling for accessibility and usability.
+
+## Entry Deactivation After Selection
+
+_Date: 2026-05-08_
+
+**Entries are automatically deactivated after being randomly selected and moved to the bottom of the list.**
+
+Rationale: When an entry is picked, it should be excluded from future random selections to avoid repeated picks. Rather than removing entries entirely, they are marked as inactive — visually greyed out with a line-through — so users retain a record of all entries and can manually re-enable them if desired.
+
+Implementation details:
+- Each entry gains an optional `inactive` boolean flag (defaults to `false`/absent for backward compatibility).
+- Inactive entries are excluded from `pickRandom()` and the active entry count.
+- After a pick, the winning entry is deactivated and moved to the bottom of the entries list.
+- Users can toggle an entry's active/inactive state via a button (⏸ to deactivate, 🔄 to re-enable).
+- All other interactions (delete) remain available on inactive entries.
+- The Pick button is disabled when no active entries remain.
+- Inactive styling uses neutral grey colours consistent with the app's light theme.
