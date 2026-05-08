@@ -517,7 +517,8 @@ function renderMainContent() {
   });
 
   $('btn-clear-history').addEventListener('click', () => {
-    if (!confirm(`Clear pick history for "${topic}"?`)) return;
+    const topicLabelForPrompt = topic.replace(/\s+/g, ' ').trim();
+    if (!confirm(`Clear pick history for topic: ${topicLabelForPrompt}?`)) return;
     App.clearPickHistory(topic);
     showToast('Pick history cleared.', 'success');
     renderMainContent();
