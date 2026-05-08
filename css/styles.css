@@ -614,6 +614,61 @@ body {
   background: var(--clr-danger-faint);
 }
 
+/* ---------- Inactive Entry ---------- */
+.entry-item.entry-inactive {
+  background: #f0f0f0;
+  border-color: #d0d0d0;
+  opacity: 0.65;
+}
+
+.entry-item.entry-inactive .entry-name {
+  color: #999;
+  text-decoration: line-through;
+}
+
+.entry-item.entry-inactive .entry-number,
+.entry-item.entry-inactive .entry-user-name {
+  color: #bbb;
+}
+
+.entry-item.entry-inactive .entry-user-dot {
+  opacity: 0.4;
+}
+
+/* ---------- Toggle Entry Button ---------- */
+.btn-toggle-entry {
+  background: none;
+  border: none;
+  color: var(--clr-text-faint);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color var(--transition), background var(--transition);
+  opacity: 0;
+}
+
+.entry-item:hover .btn-toggle-entry,
+.entry-item:focus-within .btn-toggle-entry {
+  opacity: 1;
+}
+
+.entry-item.entry-inactive .btn-toggle-entry {
+  opacity: 1;
+}
+
+.btn-toggle-entry:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--clr-primary);
+  outline-offset: 2px;
+}
+
+.btn-toggle-entry:hover {
+  color: var(--clr-primary);
+  background: var(--clr-primary-glow);
+}
+
 .entries-empty {
   padding: 20px;
   text-align: center;

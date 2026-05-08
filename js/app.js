@@ -161,6 +161,36 @@ const App = (() => {
     persist();
   }
 
+  function deactivateEntry(topicName, index) {
+    const topic = state.topics[topicName];
+    if (!topic || index < 0 || index >= topic.entries.length) return;
+    const entry = topic.entries[index];
+    entry.inactive = true;
+    /* Move deactivated entry to the bottom of the list */
+    topic.entries.splice(index, 1);
+    topic.entries.push(entry);
+    persist();
+  }
+
+  function toggleEntryActive(topicName, index) {
+    const topic = state.topics[topicName];
+    if (!topic || index < 0 || index >= topic.entries.length) return;
+    const entry = topic.entries[index];
+    entry.inactive = !entry.inactive;
+    if (entry.inactive) {
+      /* Move deactivated entry to the bottom */
+      topic.entries.splice(index, 1);
+      topic.entries.push(entry);
+    }
+    persist();
+  }
+
+  function getActiveEntries(topicName) {
+    const topic = state.topics[topicName];
+    if (!topic) return [];
+    return topic.entries.filter(e => !e.inactive);
+  }
+
   /* ---- user operations ---- */
   function addUser(name, colour) {
     const trimmed = name.trim();
@@ -184,18 +214,22 @@ const App = (() => {
   /* ---- selection ---- */
   function pickRandom(topicName) {
     const topic = state.topics[topicName];
-    if (!topic || topic.entries.length === 0) return null;
+    if (!topic) return null;
+
+    /* Exclude inactive entries from the pick pool */
+    const active = topic.entries.filter(e => !e.inactive);
+    if (active.length === 0) return null;
 
     if (!topic.fairMode) {
-      return topic.entries[Math.floor(Math.random() * topic.entries.length)];
+      return active[Math.floor(Math.random() * active.length)];
     }
 
     /* Fair mode: exclude entries whose userId is already picked this round */
     const pickedIds = topic.fairModePickedUserIds || [];
-    const eligible = topic.entries.filter(e => !e.userId || !pickedIds.includes(e.userId));
+    const eligible = active.filter(e => !e.userId || !pickedIds.includes(e.userId));
 
-    /* If no eligible entries remain, fall back to full list (round will reset in recordPick) */
-    const pool = eligible.length > 0 ? eligible : topic.entries;
+    /* If no eligible entries remain, fall back to full active list (round will reset in recordPick) */
+    const pool = eligible.length > 0 ? eligible : active;
 
     return pool[Math.floor(Math.random() * pool.length)];
   }
@@ -216,7 +250,7 @@ const App = (() => {
 
       /* If all users were already picked, reset the round before tracking */
       const userIdsInTopic = [...new Set(
-        topic.entries.map(e => e.userId).filter(Boolean)
+        topic.entries.filter(e => !e.inactive).map(e => e.userId).filter(Boolean)
       )];
       if (userIdsInTopic.length > 0 && userIdsInTopic.every(id => topic.fairModePickedUserIds.includes(id))) {
         topic.fairModePickedUserIds = [];
@@ -255,9 +289,10 @@ const App = (() => {
 
   return {
     topicNames, addTopic, deleteTopic, selectTopic,
-    addEntry, removeEntry, pickRandom, recordPick,
+    addEntry, removeEntry, deactivateEntry, toggleEntryActive,
+    pickRandom, recordPick,
     addUser, removeUser, getUsers, getUserById,
-    getActiveTopic, getEntries, getPickHistory,
+    getActiveTopic, getEntries, getActiveEntries, getPickHistory,
     setFairMode, isFairMode,
     get spinInterval() { return spinInterval; },
     set spinInterval(v) { spinInterval = v; },
@@ -371,6 +406,7 @@ function renderMainContent() {
   }
 
   const entries = App.getEntries(topic);
+  const activeEntries = App.getActiveEntries(topic);
   const picks   = App.getPickHistory(topic);
   const users   = App.getUsers();
 
@@ -390,13 +426,15 @@ function renderMainContent() {
       <div class="card picker-card">
         <p class="card-title">✨ Random Selection</p>
         <div class="picker-result" id="picker-result">
-          ${entries.length === 0
-            ? '<span class="result-placeholder">Add entries to start picking</span>'
+          ${activeEntries.length === 0
+            ? (entries.length > 0
+              ? '<span class="result-placeholder">All entries are inactive — re-enable some to pick</span>'
+              : '<span class="result-placeholder">Add entries to start picking</span>')
             : '<span class="result-placeholder">Hit "Pick!" to select a random entry</span>'
           }
         </div>
         <div class="picker-actions">
-          <button class="btn btn-accent" id="btn-pick" ${entries.length === 0 ? 'disabled' : ''}>
+          <button class="btn btn-accent" id="btn-pick" ${activeEntries.length === 0 ? 'disabled' : ''}>
             🐾 Pick!
           </button>
           <label class="fair-mode-toggle" title="Fair mode ensures each user is picked before any user is repeated">
@@ -468,12 +506,19 @@ function renderEntriesHtml(topic, entries) {
   }
   return entries.map((entry, idx) => {
     const user = entry.userId ? App.getUserById(entry.userId) : null;
+    const isInactive = !!entry.inactive;
     return `
-      <div class="entry-item" data-index="${idx}" id="entry-${idx}">
+      <div class="entry-item${isInactive ? ' entry-inactive' : ''}" data-index="${idx}" id="entry-${idx}">
         <span class="entry-number">${idx + 1}</span>
         ${user ? `<span class="entry-user-dot" style="background:${escapeAttr(user.colour)}" title="${escapeAttr(user.name)}" aria-label="User: ${escapeAttr(user.name)}"></span>` : ''}
         <span class="entry-name">${escapeHtml(entry.text)}</span>
         ${user ? `<span class="entry-user-name">${escapeHtml(user.name)}</span>` : ''}
+        <button
+          class="btn-toggle-entry"
+          data-index="${idx}"
+          title="${isInactive ? 'Re-enable entry' : 'Deactivate entry'}"
+          aria-label="${isInactive ? 'Re-enable' : 'Deactivate'} ${escapeAttr(entry.text)}"
+        >${isInactive ? '🔄' : '⏸'}</button>
         <button
           class="btn-delete-entry"
           data-index="${idx}"
@@ -510,7 +555,7 @@ function renderPickItemHtml(pick) {
    Picker Animation
    ========================================================= */
 function runPicker(topic) {
-  const entries = App.getEntries(topic);
+  const entries = App.getActiveEntries(topic);
   if (entries.length === 0) return;
 
   /* stop any previous spin */
@@ -553,7 +598,7 @@ function runPicker(topic) {
       /* final pick */
       const winner = App.pickRandom(topic);
       if (!winner) {
-        pickBtn.disabled = false;
+        pickBtn.disabled = App.getActiveEntries(topic).length === 0;
         if (fairModeCheckbox) fairModeCheckbox.disabled = false;
         return;
       }
@@ -583,18 +628,29 @@ function runPicker(topic) {
         }
       }
 
-      /* highlight matching entry */
+      /* highlight matching entry then deactivate it */
       const topicEntries = App.getEntries(topic);
       const idx = topicEntries.indexOf(winner);
       if (idx !== -1) {
-        const entryEl = document.getElementById(`entry-${idx}`);
+        App.deactivateEntry(topic, idx);
+        /* Re-render the entries list to reflect deactivation + reorder */
+        const entriesListEl = $('entries-list');
+        if (entriesListEl) {
+          entriesListEl.innerHTML = renderEntriesHtml(topic, App.getEntries(topic));
+        }
+        /* Scroll the now-deactivated entry (moved to bottom) into view */
+        const movedEntries = App.getEntries(topic);
+        const newIdx = movedEntries.length - 1;
+        const entryEl = document.getElementById(`entry-${newIdx}`);
         if (entryEl) {
           entryEl.classList.add('highlighted');
           entryEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
       }
 
-      pickBtn.disabled = false;
+      /* Disable pick button if no active entries remain */
+      const remaining = App.getActiveEntries(topic);
+      pickBtn.disabled = remaining.length === 0;
       if (fairModeCheckbox) fairModeCheckbox.disabled = false;
     }
   }, SPIN_INTERVAL_MS);
@@ -661,6 +717,17 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Delete-entry delegation (re-attached inside renderMainContent via event listeners,
      but also handle dynamically rendered buttons via delegation on main-content) */
   $('main-content').addEventListener('click', e => {
+    const toggleBtn = e.target.closest('.btn-toggle-entry');
+    if (toggleBtn) {
+      const idx = parseInt(toggleBtn.dataset.index, 10);
+      const topic = App.getActiveTopic();
+      if (!topic) return;
+      App.toggleEntryActive(topic, idx);
+      renderTopicList();
+      renderMainContent();
+      return;
+    }
+
     const btn = e.target.closest('.btn-delete-entry');
     if (!btn) return;
     const idx = parseInt(btn.dataset.index, 10);
