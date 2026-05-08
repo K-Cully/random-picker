@@ -104,6 +104,14 @@ _Date: 2026-05-06_
 **Replaced stacked sidebar sections with a tab-based interface (Topics / Users)**  
 Rationale: The previous layout stacked the Topics and Users panels vertically within a fixed-width sidebar. When both panels had content the Users section would overlap or compress the Topics list, making the UI confusing. A tab interface shows one panel at a time, eliminates the overlap issue, and gives each panel the full vertical space of the sidebar. Tabs use ARIA `role="tablist"` / `role="tab"` / `role="tabpanel"` for accessibility.
 
+## Fair Mode Checkbox Theming
+
+_Date: 2026-05-08_
+
+**Replaced the native browser checkbox on the "Fair mode" toggle with a custom circular indicator styled to match the application theme.**
+
+Rationale: The default browser checkbox rendered as a grey square that clashed with the app's rounded, colourful aesthetic. The custom indicator uses a CSS-only approach: the native `<input type="checkbox">` is visually hidden (but remains in the DOM for accessibility and keyboard navigation), and a sibling `<span class="fair-mode-indicator">` is styled as a circle using `border-radius: 50%`. Unchecked state shows a white circle with a blue border; checked state shows a solid blue circle with a white checkmark and an orange glow ring (using `var(--clr-accent-glow)`, a new semi-transparent variant of `--clr-accent` added to `:root`), consistent with the app's blue/orange colour palette. Focus-visible and disabled states are also handled.
+
 ## Fair Mode (Pseudo-Random Selection)
 
 _Date: 2026-05-07_
