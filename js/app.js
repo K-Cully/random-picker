@@ -427,7 +427,9 @@ function renderMainContent() {
         <p class="card-title">✨ Random Selection</p>
         <div class="picker-result" id="picker-result">
           ${activeEntries.length === 0
-            ? '<span class="result-placeholder">Add entries to start picking</span>'
+            ? (entries.length > 0
+              ? '<span class="result-placeholder">All entries are inactive — re-enable some to pick</span>'
+              : '<span class="result-placeholder">Add entries to start picking</span>')
             : '<span class="result-placeholder">Hit "Pick!" to select a random entry</span>'
           }
         </div>
@@ -595,7 +597,7 @@ function runPicker(topic) {
       /* final pick */
       const winner = App.pickRandom(topic);
       if (!winner) {
-        pickBtn.disabled = false;
+        pickBtn.disabled = App.getActiveEntries(topic).length === 0;
         if (fairModeCheckbox) fairModeCheckbox.disabled = false;
         return;
       }

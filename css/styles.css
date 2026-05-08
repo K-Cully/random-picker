@@ -648,12 +648,19 @@ body {
   opacity: 0;
 }
 
-.entry-item:hover .btn-toggle-entry {
+.entry-item:hover .btn-toggle-entry,
+.entry-item:focus-within .btn-toggle-entry {
   opacity: 1;
 }
 
 .entry-item.entry-inactive .btn-toggle-entry {
   opacity: 1;
+}
+
+.btn-toggle-entry:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--clr-primary);
+  outline-offset: 2px;
 }
 
 .btn-toggle-entry:hover {
